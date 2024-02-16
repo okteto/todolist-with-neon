@@ -1,0 +1,59 @@
+build:
+  server:
+    context: server
+    target: prod
+
+  client:
+    context: client
+
+  dev:
+    context: server
+    target: dev
+
+deploy:
+  image: $OKTETO_BUILD_DEV_IMAGE
+  commands:
+  - name: Create a Neon branch
+    command: |
+      neonctl branches create --name dev/todo-$OKTETO_NAMESPACE --project-id $NEON_PROJECT_ID
+      echo "OKTETO_EXTERNAL_NEON_ENDPOINTS_DB_URL=https://console.neon.tech/app/projects/$NEON_PROJECT_ID/branches" >> $OKTETO_ENV
+  - name: Deploy the Node.js Backend
+    command: |
+      cs=$(neonctl cs "dev/todo-$OKTETO_NAMESPACE" --project-id $NEON_PROJECT_ID)
+      helm upgrade --install server server/chart --set image=${OKTETO_BUILD_SERVER_IMAGE} --set db.connectionString=$cs
+  - name: Deploy the React Frontend
+    command: helm upgrade --install client client/chart --set image=${OKTETO_BUILD_CLIENT_IMAGE}
+
+destroy:
+  image: $OKTETO_BUILD_DEV_IMAGE
+  commands:
+  - name: Delete the Neon branch
+    command: neonctl branches delete "dev/todo-$OKTETO_NAMESPACE" --project-id $NEON_PROJECT_ID
+
+external:
+  docs:
+    icon: okteto
+    notes: README.md
+    endpoints:
+    - name: readme
+      url: https://github.com/okteto/oktetodo/blob/main/README.md
+  neon:
+    icon: database
+    notes: db/README.md
+    endpoints:
+    - name: db
+
+dev:
+  server:
+    image: $OKTETO_BUILD_DEV_IMAGE
+    command: bash
+    sync:
+      - server:/app
+    environment:
+    - NEON_API_KEY
+    - NEON_PROJECT_ID
+  
+  client:
+    command: bash
+    sync:
+      - client:/app

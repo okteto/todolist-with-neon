@@ -1,0 +1,4 @@
+replicaCount: 1
+image: "rinkiyakedad/oktetodo-server"
+db:
+  connectionString: "postgres://postgres:postgres@database:5432/oktetodo"
