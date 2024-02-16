@@ -16,7 +16,10 @@ deploy:
   - name: Create a Neon branch
     command: |
       neonctl branches create --name dev/todo-$OKTETO_NAMESPACE --project-id $NEON_PROJECT_ID
-      echo "OKTETO_EXTERNAL_NEON_ENDPOINTS_DB_URL=https://console.neon.tech/app/projects/$NEON_PROJECT_ID/branches" >> $OKTETO_ENV
+      
+      # pass the console URL to OKTETO_ENV so it's included in the UI
+      branch_id=$(neonctl branches get "dev/todo-$OKTETO_NAMESPACE" --project-id $NEON_PROJECT_ID -o=json | jq '.id')
+      echo "OKTETO_EXTERNAL_NEON_ENDPOINTS_DB_URL=https://console.neon.tech/app/projects/$NEON_PROJECT_ID/branches/$branch_id" >> $OKTETO_ENV
   - name: Deploy the Node.js Backend
     command: |
       cs=$(neonctl cs "dev/todo-$OKTETO_NAMESPACE" --project-id $NEON_PROJECT_ID)
