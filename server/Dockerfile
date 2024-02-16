@@ -1,8 +1,12 @@
+FROM ghcr.io/jqlang/jq:1.7.1 as jq
+
 # Use an official Node.js runtime as the base image
 FROM node:20 as dev
 
-# Install 
-RUN npm i -g neonctl nodemon node-jq
+# Install dev tools
+RUN npm i -g neonctl nodemon
+COPY --from=jq /jq /usr/local/bin/jq
+
 
 # Set the working directory
 WORKDIR /app
